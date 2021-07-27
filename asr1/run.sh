@@ -149,11 +149,6 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
     data2json.sh --nj ${nj} --feat ${feat_dt_dir}/feats.scp --bpecode ${bpemodel}.model \
         data/${train_dev} ${dict} > ${feat_dt_dir}/data_${bpemode}${nbpe}.json
 
-    data2json.sh --nj ${nj} --feat ${feat_tr_dir}/feats.scp --allow-one-column true --bpecode ${bpemodel}.model \
-        data/${train_combined} ${dict} > ${feat_tr_dir}/data_${bpemode}${nbpe}.json
-    data2json.sh --nj ${nj} --feat ${feat_dt_dir}/feats.scp --allow-one-column true --bpecode ${bpemodel}.model \
-        data/${dev_combined} ${dict} > ${feat_dt_dir}/data_${bpemode}${nbpe}.json
-
     for rtask in ${recog_set}; do
         feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}
         data2json.sh --nj ${nj} --feat ${feat_recog_dir}/feats.scp --bpecode ${bpemodel}.model \
