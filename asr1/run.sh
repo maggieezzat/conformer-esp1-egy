@@ -139,15 +139,20 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
     echo $'<unk> 1\n<noise> 2' > ${dict} # <unk> must be 1, 0 will be used for "blank" in CTC
     cut -f 2- -d" " data/${train_set}/text > data/lang_char/input.txt
     
-    spm_train --input=data/lang_char/input.txt --vocab_size=${nbpe} --model_type=${bpemode} --model_prefix=${bpemodel} --input_sentence_size=100000000 --character_coverage=1.0 --unk_piece='<UNK>'
+    spm_train --input=data/lang_char/input.txt --vocab_size=${nbpe} --model_type=${bpemode} --model_prefix=${bpemodel} --input_sentence_size=100000000 --character_coverage=1.0 --unk_piece='<unk>' --user_defined_symbols='<noise>'
     spm_encode --model=${bpemodel}.model --output_format=piece < data/lang_char/input.txt | tr ' ' '\n' | sort | uniq | awk '{print $0 " " NR+1}' >> ${dict}
     wc -l ${dict}
 
     # make json labels
-    data2json.sh --nj ${nj} --feat ${feat_tr_dir}/feats.scp --bpecode ${bpemodel}.model \
+    data2json.sh --nj ${nj} --feat ${feat_tr_dir}/feats.scp --allow-one-column true --bpecode ${bpemodel}.model \
         data/${train_set} ${dict} > ${feat_tr_dir}/data_${bpemode}${nbpe}.json
     data2json.sh --nj ${nj} --feat ${feat_dt_dir}/feats.scp --bpecode ${bpemodel}.model \
         data/${train_dev} ${dict} > ${feat_dt_dir}/data_${bpemode}${nbpe}.json
+
+    data2json.sh --nj ${nj} --feat ${feat_tr_dir}/feats.scp --allow-one-column true --bpecode ${bpemodel}.model \
+        data/${train_combined} ${dict} > ${feat_tr_dir}/data_${bpemode}${nbpe}.json
+    data2json.sh --nj ${nj} --feat ${feat_dt_dir}/feats.scp --allow-one-column true --bpecode ${bpemodel}.model \
+        data/${dev_combined} ${dict} > ${feat_dt_dir}/data_${bpemode}${nbpe}.json
 
     for rtask in ${recog_set}; do
         feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}
@@ -225,7 +230,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
         --minibatches ${N} \
         --verbose ${verbose} \
         --resume ${resume} \
-        --train-json ${feat_sp_dir}/data_${bpemode}${nbpe}.json \
+        --train-json ${feat_tr_dir}/data_${bpemode}${nbpe}.json \
         --valid-json ${feat_dt_dir}/data_${bpemode}${nbpe}.json
 fi
 
