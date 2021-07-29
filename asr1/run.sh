@@ -64,12 +64,10 @@ set -e
 set -u
 set -o pipefail
 
-#train_combined="msa"
-#train_dir="msa msa_noise msa_speed colloquial colloquial_noise colloquial_speed mgb3_adapt mgb3_adapt_noise mgb3_adapt_speed callhome_set_8K"     
-#train_combined="train_combined"
-
-train_dir="msa colloquial"     
-train_combined="train_msa_coll"
+train_dir="msa msa_noise msa_speed colloquial colloquial_noise colloquial_speed mgb3_adapt mgb3_adapt_noise mgb3_adapt_speed callhome_set_8K"     
+train_combined="train_combined"
+#train_dir="msa colloquial"     
+#train_combined="train_msa_coll"
 train_dev="coll_dev_new"
 recog_set="coll_dev_10"
 #recog_set="mgb2_test"
@@ -109,8 +107,8 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
         utils/fix_data_dir.sh data/${x}
     done
 
-    #utils/combine_data.sh --extra_files utt2num_frames data/${train_combined}_org data/msa data/msa_noise data/msa_speed data/colloquial data/colloquial_noise data/colloquial_speed data/mgb3_adapt data/mgb3_adapt_noise data/mgb3_adapt_speed data/callhome_set_8K data/new_120h_set_8K data/mgb5_set_8K
-    utils/combine_data.sh --extra_files utt2num_frames data/${train_combined}_org data/msa data/colloquial 
+    utils/combine_data.sh --extra_files utt2num_frames data/${train_combined}_org data/msa data/msa_noise data/msa_speed data/colloquial data/colloquial_noise data/colloquial_speed data/mgb3_adapt data/mgb3_adapt_noise data/mgb3_adapt_speed data/callhome_set_8K data/new_120h_set_8K data/mgb5_set_8K
+    #utils/combine_data.sh --extra_files utt2num_frames data/${train_combined}_org data/msa data/colloquial 
     
     #utils/combine_data.sh --extra_files utt2num_frames data/${train_dev}_org data/dev_clean data/dev_other
 
