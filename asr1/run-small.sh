@@ -16,7 +16,7 @@ debugmode=1
 dumpdir=dump   # directory to dump full features
 N=0            # number of minibatches to be used (mainly for debugging). "0" uses all minibatches.
 verbose=0      # verbose option
-resume=true        # Resume the training from snapshot
+resume=        # Resume the training from snapshot
 perturb_speed=false
 
 # feature configuration
@@ -64,8 +64,8 @@ set -e
 set -u
 set -o pipefail
 
-train_dir="msa msa_noise msa_speed colloquial colloquial_noise colloquial_speed mgb3_adapt mgb3_adapt_noise mgb3_adapt_speed callhome_set_8K"     
-train_combined="train_combined"
+train_dir="msa colloquial"     
+train_combined="train_msa_coll"
 train_dev="coll_dev_new"
 recog_set="coll_dev_10"
 #recog_set="mgb2_test"
@@ -101,12 +101,14 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     # Generate the fbank features; by default 80-dimensional fbanks with pitch on each frame
     for x in ${train_dir} ${train_dev} ${recog_set}; do
         steps/make_fbank_pitch.sh --cmd "$train_cmd" --nj ${nj} --write_utt2num_frames true \
-            data/${x} exp/make_fbank/${x} ${fbankdir}
+            data/${x} exp-small/make_fbank/${x} ${fbankdir}
         utils/fix_data_dir.sh data/${x}
     done
 
-    utils/combine_data.sh --extra_files utt2num_frames data/${train_combined}_org data/msa data/msa_noise data/msa_speed data/colloquial data/colloquial_noise data/colloquial_speed data/mgb3_adapt data/mgb3_adapt_noise data/mgb3_adapt_speed data/callhome_set_8K data/new_120h_set_8K data/mgb5_set_8K
+    utils/combine_data.sh --extra_files utt2num_frames data/${train_combined}_org data/msa data/colloquial 
     
+    #utils/combine_data.sh --extra_files utt2num_frames data/${train_dev}_org data/dev_clean data/dev_other
+
     # remove utt having more than 3000 frames
     # remove utt having more than 400 characters
     #mv data/${train_combined} data/${train_combined}_org
@@ -118,14 +120,14 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     compute-cmvn-stats scp:data/${train_combined}/feats.scp data/${train_combined}/cmvn.ark
 
     dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta ${do_delta} \
-        data/${train_combined}/feats.scp data/${train_combined}/cmvn.ark exp/dump_feats/train ${feat_tr_dir}
+        data/${train_combined}/feats.scp data/${train_combined}/cmvn.ark exp-small/dump_feats/train ${feat_tr_dir}
     dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta ${do_delta} \
-        data/${train_dev}/feats.scp data/${train_combined}/cmvn.ark exp/dump_feats/dev ${feat_dt_dir}
+        data/${train_dev}/feats.scp data/${train_combined}/cmvn.ark exp-small/dump_feats/dev ${feat_dt_dir}
 
     for rtask in ${recog_set}; do
         feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}; mkdir -p ${feat_recog_dir}
         dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta ${do_delta} \
-            data/${rtask}/feats.scp data/${train_combined}/cmvn.ark exp/dump_feats/recog/${rtask} \
+            data/${rtask}/feats.scp data/${train_combined}/cmvn.ark exp-small/dump_feats/recog/${rtask} \
             ${feat_recog_dir}
     done
 fi
@@ -165,7 +167,7 @@ if [ -z ${lmtag} ]; then
     lmtag=$(basename ${lm_config%.*})
 fi
 lmexpname=train_rnnlm_${backend}_${lmtag}_${bpemode}${nbpe}_ngpu${ngpu}
-lmexpdir=exp/${lmexpname}
+lmexpdir=exp-small/${lmexpname}
 mkdir -p ${lmexpdir}
 
 if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
@@ -210,7 +212,7 @@ if [ -z ${tag} ]; then
 else
     expname=${train_combined}_${backend}_${tag}
 fi
-expdir=exp/${expname}
+expdir=exp-small/${expname}
 mkdir -p ${expdir}
 
 if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
