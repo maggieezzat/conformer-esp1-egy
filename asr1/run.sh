@@ -101,7 +101,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     # Generate the fbank features; by default 80-dimensional fbanks with pitch on each frame
     for x in ${train_dir} ${train_dev} ${recog_set}; do
         steps/make_fbank_pitch.sh --cmd "$train_cmd" --nj ${nj} --write_utt2num_frames true \
-            data/${x} exp/make_fbank/${x} ${fbankdir}
+            data/${x} exp-large/make_fbank/${x} ${fbankdir}
         utils/fix_data_dir.sh data/${x}
     done
 
@@ -118,14 +118,14 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     compute-cmvn-stats scp:data/${train_combined}/feats.scp data/${train_combined}/cmvn.ark
 
     dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta ${do_delta} \
-        data/${train_combined}/feats.scp data/${train_combined}/cmvn.ark exp/dump_feats/train ${feat_tr_dir}
+        data/${train_combined}/feats.scp data/${train_combined}/cmvn.ark exp-large/dump_feats/train ${feat_tr_dir}
     dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta ${do_delta} \
-        data/${train_dev}/feats.scp data/${train_combined}/cmvn.ark exp/dump_feats/dev ${feat_dt_dir}
+        data/${train_dev}/feats.scp data/${train_combined}/cmvn.ark exp-large/dump_feats/dev ${feat_dt_dir}
 
     for rtask in ${recog_set}; do
         feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}; mkdir -p ${feat_recog_dir}
         dump.sh --cmd "$train_cmd" --nj ${nj} --do_delta ${do_delta} \
-            data/${rtask}/feats.scp data/${train_combined}/cmvn.ark exp/dump_feats/recog/${rtask} \
+            data/${rtask}/feats.scp data/${train_combined}/cmvn.ark exp-large/dump_feats/recog/${rtask} \
             ${feat_recog_dir}
     done
 fi
@@ -165,7 +165,7 @@ if [ -z ${lmtag} ]; then
     lmtag=$(basename ${lm_config%.*})
 fi
 lmexpname=train_rnnlm_${backend}_${lmtag}_${bpemode}${nbpe}_ngpu${ngpu}
-lmexpdir=exp/${lmexpname}
+lmexpdir=exp-large/${lmexpname}
 mkdir -p ${lmexpdir}
 
 if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
@@ -210,7 +210,7 @@ if [ -z ${tag} ]; then
 else
     expname=${train_combined}_${backend}_${tag}
 fi
-expdir=exp/${expname}
+expdir=exp-large/${expname}
 mkdir -p ${expdir}
 
 if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
