@@ -21,5 +21,5 @@ module load tensorboardX/2.1-fosscuda-2020b-PyTorch-1.7.1
 module load cryptography/3.4.7-fosscuda-2020b
 
 
-srun ./run.sh --stage 2 --stop_stage 2 --resume 'exp-small/train_msa_coll_pytorch_train_specaug/results/snapshot.ep.55'
+srun ./run-small.sh --stage 2 --stop_stage 2 --resume 'exp-small/train_msa_coll_pytorch_train_specaug/results/snapshot.ep.55'
 
