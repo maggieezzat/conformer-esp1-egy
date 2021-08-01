@@ -13,7 +13,7 @@ stop_stage=100
 ngpu=4         # number of gpus ("0" uses cpu, otherwise use gpu)
 nj=32
 debugmode=1
-dumpdir=dump   # directory to dump full features
+dumpdir=dump-small   # directory to dump full features
 N=0            # number of minibatches to be used (mainly for debugging). "0" uses all minibatches.
 verbose=0      # verbose option
 resume=        # Resume the training from snapshot
@@ -106,8 +106,6 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     done
 
     utils/combine_data.sh --extra_files utt2num_frames data/${train_combined}_org data/msa data/colloquial 
-    
-    #utils/combine_data.sh --extra_files utt2num_frames data/${train_dev}_org data/dev_clean data/dev_other
 
     # remove utt having more than 3000 frames
     # remove utt having more than 400 characters
@@ -132,21 +130,21 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     done
 fi
 
-dict=data/lang_char/${train_combined}_${bpemode}${nbpe}_units.txt
-bpemodel=data/lang_char/${train_combined}_${bpemode}${nbpe}
+dict=data/lang_char_small/${train_combined}_${bpemode}${nbpe}_units.txt
+bpemodel=data/lang_char_small/${train_combined}_${bpemode}${nbpe}
 echo "dictionary: ${dict}"
 if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
     ### Task dependent. You have to check non-linguistic symbols used in the corpus.
     echo "stage 2: Dictionary and Json Data Preparation"
-    mkdir -p data/lang_char/
+    mkdir -p data/lang_char_small/
     echo $'<unk> 1' > ${dict} # <unk> must be 1, 0 will be used for "blank" in CTC
-    cut -f 2- -d" " data/${train_combined}/text > data/lang_char/input.txt
+    cut -f 2- -d" " data/${train_combined}/text > data/lang_char_small/input.txt
     
 
 
-    spm_train --input=data/lang_char/input.txt --vocab_size=${nbpe} --model_type=${bpemode} --model_prefix=${bpemodel} --input_sentence_size=100000000 --character_coverage=1.0 --unk_piece='<unk>' --user_defined_symbols='<noise>'
+    spm_train --input=data/lang_char_small/input.txt --vocab_size=${nbpe} --model_type=${bpemode} --model_prefix=${bpemodel} --input_sentence_size=100000000 --character_coverage=1.0 --unk_piece='<unk>' --user_defined_symbols='<noise>'
     
-    spm_encode --model=${bpemodel}.model --output_format=piece < data/lang_char/input.txt | tr ' ' '\n' | sort | uniq | awk '{print $0 " " NR+1}' >> ${dict}
+    spm_encode --model=${bpemodel}.model --output_format=piece < data/lang_char_small/input.txt | tr ' ' '\n' | sort | uniq | awk '{print $0 " " NR+1}' >> ${dict}
     wc -l ${dict}
 
     # make json labels
