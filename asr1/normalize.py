@@ -29,6 +29,8 @@ def compute_normalized_wer(results_data_path, output_wer_path, data_name):
             norm_hypo.append(hyp_text)
 
     error = wer(norm_ground_truth, norm_hypo)
+    error = error * 100
+    error = "{:.2f}".format(error)
     print(error)
     with open(output_wer_path, 'w') as out:
         out.write(data_name + ' normalized WER: ' + str(error) + '\n')
